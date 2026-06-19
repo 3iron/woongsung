@@ -623,40 +623,64 @@ const WHEEL_COLORS = [
   ['#A7E2F4','#2A8AB0'],['#E2A7F4','#8A2AB0'],['#A7F4E2','#2AB08A']
 ];
 
-let meetings = JSON.parse(localStorage.getItem('wsMeetings')||'null') || [
-  {
-    id:1, date:'2024-11-16', name:'웅성웅성 7회 모임', type:'book',
-    title:'82년생 김지영', memo:'카페 하하에서 14시, 불꽃 튀는 토론 예정',
-    members:['지은','수현','민아','혜린']
-  },
-  {
-    id:2, date:'2024-12-14', name:'웅성웅성 8회 모임', type:'movie',
-    title:'아이 캔 스피크', memo:'온라인 모임 zoom 링크 공유 예정',
-    members:['지은','수현','민아','혜린','보미']
-  },
-  {
-    id:3, date:'2025-01-18', name:'웅성웅성 9회 모임', type:'both',
-    title:'채식주의자 + 우리들의 블루스', memo:'새해 첫 모임! 떡국 먹으면서',
-    members:['지은','수현','혜린']
-  },
-  {
-    id:4, date:'2025-03-08', name:'웅성웅성 10회 모임 (세계 여성의 날)', type:'movie',
-    title:'히든 피겨스', memo:'여성의 날 기념 특별 상영', members:['지은','수현','민아','혜린','보미','채린']
-  },
-  {
-    id:5, date:'2025-05-17', name:'웅성웅성 11회 모임', type:'book',
-    title:'아몬드', memo:'', members:['지은','수현','민아']
-  },
-];
-saveMeetings();
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwW55uU3GVDg8PeUEQ0bt2plBKF7Yo07xoEclyziMXwSNdTFHu7VtJyU2NX7h8HFV0YQQ/exec';
 
-function saveMeetings(){localStorage.setItem('wsMeetings',JSON.stringify(meetings))}
-
+let meetings = [];
 let lists = JSON.parse(localStorage.getItem('wsLists')||'null') || {
   movie:['아이 캔 스피크','히든 피겨스','82년생 김지영','세 번의 결혼','윤희에게','미나리','마마 미아'],
   book:['채식주의자','82년생 김지영','아몬드','달러구트 꿈 백화점','파친코','우리가 빛의 속도로 갈 수 없다면']
 };
 function saveLists(){localStorage.setItem('wsLists',JSON.stringify(lists))}
+
+/* ── GOOGLE SHEETS API ── */
+async function apiGet(action){
+  const res = await fetch(SHEET_URL+'?action='+action);
+  return res.json();
+}
+async function apiPost(data){
+  await fetch(SHEET_URL, {
+    method:'POST',
+    body:JSON.stringify(data)
+  });
+}
+
+function rowToMeeting(r){
+  return {id:r[0],date:r[1],name:r[2],type:r[3],title:r[4],memo:r[5],members:r[6]?String(r[6]).split(','):[]};
+}
+function rowToNotice(r){
+  return {id:r[0],category:r[1],title:r[2],body:r[3],author:r[4],date:r[5],likes:Number(r[6])||0,pinned:r[7]==='TRUE'||r[7]===true,likedByMe:false};
+}
+
+async function loadMeetings(){
+  try{
+    showLoading('meetings');
+    const rows = await apiGet('getMeetings');
+    meetings = rows.slice(1).map(rowToMeeting);
+    renderCal();
+    renderHistory('all');
+  }catch(e){showToast('일정 불러오기 실패 😢')}
+  finally{hideLoading('meetings')}
+}
+
+async function loadNotices(){
+  try{
+    showLoading('notices');
+    const rows = await apiGet('getNotices');
+    notices = rows.slice(1).map(rowToNotice);
+    renderNotices();
+  }catch(e){showToast('공지 불러오기 실패 😢')}
+  finally{hideLoading('notices')}
+}
+
+function showLoading(type){
+  if(type==='meetings'){
+    document.getElementById('cal-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text3);font-size:13px">불러오는 중... 🐻</div>';
+  }
+  if(type==='notices'){
+    document.getElementById('notice-list').innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중... 🐻</div>';
+  }
+}
+function hideLoading(type){}
 
 /* ── TABS ── */
 let currentTab = 0;
@@ -664,8 +688,9 @@ function goTab(n){
   currentTab = n;
   document.querySelectorAll('.tab-item').forEach((el,i)=>el.classList.toggle('active',i===n));
   document.querySelectorAll('.page').forEach((el,i)=>el.classList.toggle('active',i===n));
-  if(n===2) renderHistory('all');
-  if(n===3) renderNotices();
+  if(n===2){renderHistory('all');}
+  if(n===3){loadNotices();}
+  if(n===0){loadMeetings();}
 }
 
 /* ── CALENDAR ── */
@@ -758,13 +783,14 @@ function saveEvent(){
   const memo=document.getElementById('m-memo').value.trim();
   const members=document.getElementById('m-members').value.split(',').map(s=>s.trim()).filter(Boolean);
   if(!date||!name||!title){showToast('날짜, 모임 이름, 작품 제목은 필수예요');return}
-  meetings.push({id:Date.now(),date,name,type:modalType,title,memo,members});
+  const newMeeting={id:Date.now(),date,name,type:modalType,title,memo,members};
+  meetings.push(newMeeting);
   meetings.sort((a,b)=>a.date.localeCompare(b.date));
-  saveMeetings();
   document.getElementById('modal').classList.remove('open');
   selectedDate=date;
   renderCal();
-  showToast('일정이 추가됐어요! 🐻');
+  showToast('일정 저장 중... 🐻');
+  apiPost({action:'addMeeting',...newMeeting}).then(()=>showToast('일정이 추가됐어요! 🐻'));
 }
 
 /* ── ROULETTE ── */
@@ -915,13 +941,7 @@ function renderHistory(f){
 }
 
 /* ── NOTICE BOARD ── */
-let notices = JSON.parse(localStorage.getItem('wsNotices')||'null') || [
-  {id:1,category:'notice',title:'웅성웅성 모임 규칙 안내',body:'안녕하세요 모임원 여러분!\n\n웅성웅성 모임에 오신 것을 환영해요 🐻\n\n📌 모임 규칙\n1. 서로의 의견을 존중해요\n2. 스포일러는 미리 알려주기\n3. 모임 3일 전까지 불참 알려주기\n4. 즐겁게 이야기 나눠요!',author:'운영진',date:'2025-01-05',pinned:true,likes:5,likedByMe:false},
-  {id:2,category:'vote',title:'다음 모임 장소 투표 🗳',body:'다음 12회 모임 장소 의견 받아요!\n\nA. 종로 카페 씨앗\nB. 홍대 북카페 책밥\nC. 온라인 줌 (zoom)\n\n댓글로 A/B/C 남겨주세요!',author:'지은',date:'2025-06-01',pinned:false,likes:3,likedByMe:false},
-  {id:3,category:'free',title:'아몬드 읽고 나서 생각이 멈추질 않아요',body:'어제 밤새 아몬드 다 읽었는데 감정 표현을 못 하는 주인공이 오히려 저한테 감정을 막 쏟아내는 느낌이었어요. 다음 모임에서 많이 이야기 나누고 싶어요 🥺',author:'수현',date:'2025-05-20',pinned:false,likes:7,likedByMe:false},
-  {id:4,category:'notice',title:'6월 모임 일정 확정!',body:'📅 일시: 6월 28일 (토) 오후 2시\n📍 장소: 종로 카페 씨앗\n📖 작품: 우리가 빛의 속도로 갈 수 없다면\n\n참석 여부 댓글로 남겨주세요!',author:'운영진',date:'2025-06-10',pinned:false,likes:4,likedByMe:false},
-];
-function saveNotices(){localStorage.setItem('wsNotices',JSON.stringify(notices))}
+let notices = [];
 
 let noticeCatFilter='all';
 let noticeCategory='notice';
@@ -1000,17 +1020,17 @@ function toggleLike(id){
   if(!n) return;
   n.likedByMe=!n.likedByMe;
   n.likes+=n.likedByMe?1:-1;
-  saveNotices();
   openNoticeDetail(id);
   renderNotices();
+  apiPost({action:'updateLike',id,likes:n.likes});
 }
 
 function deleteNotice(id){
   notices=notices.filter(x=>x.id!==id);
-  saveNotices();
   document.getElementById('notice-detail-modal').classList.remove('open');
   renderNotices();
   showToast('게시글을 삭제했어요');
+  apiPost({action:'deleteNotice',id});
 }
 
 function openNoticeModal(){
@@ -1039,11 +1059,12 @@ function saveNotice(){
   const author=document.getElementById('n-author').value.trim()||'익명';
   if(!title||!body){showToast('제목과 내용은 필수예요');return}
   const today2=new Date().toISOString().slice(0,10);
-  notices.unshift({id:Date.now(),category:noticeCategory,title,body,author,date:today2,pinned:false,likes:0,likedByMe:false});
-  saveNotices();
+  const newNotice={id:Date.now(),category:noticeCategory,title,body,author,date:today2,pinned:false,likes:0,likedByMe:false};
+  notices.unshift(newNotice);
   document.getElementById('notice-modal').classList.remove('open');
   renderNotices();
-  showToast('게시글이 등록됐어요! 🐻');
+  showToast('게시글 저장 중... 🐻');
+  apiPost({action:'addNotice',...newNotice}).then(()=>showToast('게시글이 등록됐어요! 🐻'));
 }
 
 /* ── UTILS ── */
@@ -1057,8 +1078,8 @@ function showToast(msg){
 /* ── INIT ── */
 renderCal();
 renderItems(); drawWheel();
-renderHistory('all');
-renderNotices();
+loadMeetings();
+loadNotices();
 </script>
 </body>
 </html>
