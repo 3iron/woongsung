@@ -435,7 +435,7 @@ input{font-family:inherit;outline:none}
   <!-- PAGE 0: HOME / 달력 -->
   <div class="page active" id="p0">
     <div class="home-hero">
-      <div class="hero-bear">🐻</div>
+      <div class="hero-bear">🤔</div>
       <div class="hero-copy">
         <h2>다음 모임은 언제?</h2>
         <p>날짜를 탭하면<br>그날의 일정을 볼 수 있어요</p>
@@ -648,10 +648,18 @@ async function apiGet(action){
   return res.json();
 }
 async function apiPost(data){
-  await fetch(SHEET_URL, {
-    method:'POST',
-    body:JSON.stringify(data)
-  });
+  try{
+    const res = await fetch(SHEET_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data)
+    });
+    return await res.json();
+  }catch(e){
+    console.error('apiPost error:', e);
+    showToast('서버 연결 실패 😢');
+    throw e;
+  }
 }
 
 function rowToMeeting(r){
@@ -800,7 +808,9 @@ function saveEvent(){
   selectedDate=date;
   renderCal();
   showToast('일정 저장 중... 🐻');
-  apiPost({action:'addMeeting',...newMeeting}).then(()=>showToast('일정이 추가됐어요! 🐻'));
+  apiPost({action:'addMeeting',...newMeeting})
+    .then(()=>showToast('일정이 추가됐어요! 🐻'))
+    .catch(()=>showToast('저장 실패! 다시 시도해주세요 😢'));
 }
 
 /* ── ROULETTE ── */
