@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="웅성웅성"/>
+<meta name="theme-color" content="#FFF5F7"/>
+<title>웅성웅성 룰렛</title>
+
+<style>
+/* ── reset & base ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none;background:#FFF5F7;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+input{font-family:inherit;outline:none}
+
+/* ── tokens ── */
+:root{
+  --bg:#FFF5F7;
+  --bg2:#FFF0F4;
+  --surface:#FFFFFF;
+  --surface2:#FFF7F9;
+  --pink:#F4A7BC;
+  --pink-deep:#E87A9B;
+  --pink-light:#FDDDE8;
+  --cream:#FFF8E7;
+  --cream2:#FFF0D0;
+  --brown:#6B3F2A;
+  --brown-light:#C4896B;
+  --sage:#8AAE92;
+  --sage-light:#D6EDD9;
+  --text:#2D1B14;
+  --text2:#7A5A50;
+  --text3:#B89A90;
+  --border:#F0D4DC;
+  --shadow:0 2px 12px rgba(180,80,100,0.08);
+  --r:18px;--r-sm:10px;--r-xs:6px;
+}
+
+/* ── layout ── */
+.app{display:flex;flex-direction:column;height:100svh;max-width:430px;margin:0 auto;position:relative;background:var(--bg)}
+
+/* ── header ── */
+.header{
+  padding:env(safe-area-inset-top,12px) 20px 0;
+  padding-top:max(env(safe-area-inset-top),12px);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.header-inner{display:flex;align-items:center;gap:10px;padding-bottom:14px}
+.bear-logo{width:38px;height:38px;flex-shrink:0}
+.header-text h1{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.header-text p{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* ── tab bar ── */
+.tab-bar{
+  display:flex;
+  background:var(--surface);
+  border-bottom:1.5px solid var(--border);
+  padding:0 4px;
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 0 8px;font-size:10px;color:var(--text3);
+  transition:color .15s;position:relative;
+}
+.tab-item svg{width:22px;height:22px;transition:transform .15s}
+.tab-item.active{color:var(--pink-deep)}
+.tab-item.active svg{transform:scale(1.1)}
+.tab-item.active::after{
+  content:'';position:absolute;bottom:-1.5px;left:20%;right:20%;
+  height:2.5px;background:var(--pink-deep);border-radius:2px;
+}
+
+/* ── pages ── */
+.page{display:none;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.page.active{display:flex;flex-direction:column}
+
+/* ════════════════════════════════
+   PAGE 1 — HOME (달력)
+════════════════════════════════ */
+.home-hero{
+  background:linear-gradient(160deg,#FFF0F4 0%,#FFF8E7 100%);
+  padding:20px 20px 0;
+  display:flex;align-items:center;gap:14px;
+}
+.hero-bear{font-size:52px;line-height:1;flex-shrink:0}
+.hero-copy h2{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.4px}
+.hero-copy p{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.5}
+
+.section-label{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;padding:0 20px;margin:20px 0 10px}
+
+/* calendar */
+.cal-wrap{margin:0 16px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+.cal-header h3{font-size:15px;font-weight:700;color:var(--text)}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:18px;transition:background .15s}
+.cal-nav button:hover{background:var(--bg2)}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0 8px 6px}
+.cal-days-header span{font-size:11px;font-weight:600;color:var(--text3)}
+.cal-days-header span:first-child{color:#E87A9B}
+.cal-days-header span:last-child{color:#7BA7D8}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 8px 12px;gap:2px}
+.cal-cell{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;border-radius:50%;font-size:13px;color:var(--text);
+  position:relative;cursor:pointer;transition:background .12s;
+}
+.cal-cell:hover{background:var(--pink-light)}
+.cal-cell.empty{cursor:default}
+.cal-cell.empty:hover{background:none}
+.cal-cell.sun{color:#E87A9B}
+.cal-cell.sat{color:#7BA7D8}
+.cal-cell.today{background:var(--pink-light);font-weight:700;color:var(--pink-deep)}
+.cal-cell.has-event::after{
+  content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;background:var(--pink-deep);
+}
+.cal-cell.selected{background:var(--pink-deep)!important;color:#fff!important;font-weight:700}
+.cal-cell.selected::after{background:#fff}
+
+/* event detail */
+.event-detail{
+  margin:12px 16px;background:var(--surface);border-radius:var(--r);
+  border:1px solid var(--border);overflow:hidden;
+}
+.event-detail-header{
+  background:var(--pink-light);padding:12px 16px;
+  display:flex;align-items:center;gap:8px;
+}
+.event-detail-header .bear-sm{font-size:20px}
+.event-detail-header h4{font-size:14px;font-weight:700;color:var(--brown)}
+.event-detail-header span{font-size:12px;color:var(--brown-light);margin-left:auto}
+.event-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.event-row{display:flex;align-items:flex-start;gap:10px}
+.event-badge{
+  padding:3px 8px;border-radius:100px;font-size:11px;font-weight:600;flex-shrink:0;
+}
+.badge-movie{background:var(--pink-light);color:var(--pink-deep)}
+.badge-book{background:var(--sage-light);color:#4A7A55}
+.event-title{font-size:13px;color:var(--text);font-weight:500;line-height:1.4}
+.event-memo{font-size:12px;color:var(--text3);margin-top:2px;line-height:1.4}
+
+.no-event{padding:20px;text-align:center;color:var(--text3);font-size:13px}
+
+/* add event */
+.add-event-btn{
+  margin:0 16px 20px;padding:13px;border-radius:var(--r-sm);
+  border:1.5px dashed var(--pink);background:transparent;
+  color:var(--pink-deep);font-size:14px;font-weight:600;
+  width:calc(100% - 32px);transition:background .15s;
+}
+.add-event-btn:hover{background:var(--pink-light)}
+
+/* ════════════════════════════════
+   PAGE 2 — ROULETTE
+════════════════════════════════ */
+.roulette-page{padding:16px 16px 24px;gap:12px}
+
+.type-toggle{
+  display:flex;background:var(--surface);border-radius:var(--r-sm);
+  border:1px solid var(--border);padding:4px;gap:4px;
+}
+.type-btn{
+  flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;
+  color:var(--text3);transition:all .18s;
+}
+.type-btn.on-movie{background:var(--pink-deep);color:#fff;box-shadow:0 2px 8px rgba(232,122,155,0.35)}
+.type-btn.on-book{background:var(--sage);color:#fff;box-shadow:0 2px 8px rgba(138,174,146,0.35)}
+
+.canvas-wrap{position:relative;width:100%;aspect-ratio:1}
+.canvas-wrap canvas{display:block;width:100%;height:100%}
+.ptr{
+  position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  width:0;height:0;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-top:26px solid var(--pink-deep);
+  filter:drop-shadow(0 2px 6px rgba(232,122,155,0.5));
+  z-index:10;
+}
+.spin-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:68px;height:68px;border-radius:50%;
+  background:var(--surface);border:2.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;z-index:10;
+  box-shadow:0 2px 12px rgba(180,80,100,0.12);
+  transition:transform .1s;
+}
+.spin-center:active{transform:translate(-50%,-50%) scale(0.93)}
+
+.result-box{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:14px 18px;
+  min-height:60px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow);
+}
+.result-hint{font-size:13px;color:var(--text3)}
+.result-picked{font-size:17px;font-weight:700;color:var(--text);text-align:center}
+.result-emoji{font-size:24px;display:block;text-align:center;margin-bottom:4px}
+
+.list-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;flex:1}
+.list-box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.list-box-header span{font-size:13px;font-weight:700;color:var(--text)}
+.list-box-header small{font-size:11px;color:var(--text3)}
+.items-scroll{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.items-scroll::-webkit-scrollbar{width:3px}
+.items-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.item-row{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:var(--r-xs);padding:8px 10px}
+.item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.item-name{flex:1;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-del{color:var(--text3);font-size:17px;line-height:1;padding:0 2px}
+.item-del:hover{color:#E87A9B}
+
+.add-row{display:flex;gap:6px}
+.add-row input{
+  flex:1;padding:9px 12px;border-radius:var(--r-xs);
+  background:var(--bg);border:1px solid var(--border);
+  font-size:13px;color:var(--text);
+}
+.add-row input:focus{border-color:var(--pink)}
+.add-row button{
+  padding:9px 14px;border-radius:var(--r-xs);
+  background:var(--pink-light);color:var(--pink-deep);
+  font-size:13px;font-weight:600;border:1px solid var(--pink);
+  transition:background .15s;
+}
+.add-row button:active{background:var(--pink)}
+
+/* ════════════════════════════════
+   PAGE 3 — HISTORY
+════════════════════════════════ */
+.history-page{padding:16px;gap:8px}
+
+.history-filter{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;
+}
+.history-filter::-webkit-scrollbar{display:none}
+.filter-chip{
+  padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--text3);
+  white-space:nowrap;transition:all .15s;flex-shrink:0;
+}
+.filter-chip.active{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep)}
+
+.meeting-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--shadow);
+}
+.meeting-card-header{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg,var(--pink-light),var(--cream));
+}
+.meeting-card-header .bear-tiny{font-size:22px}
+.meeting-meta h4{font-size:14px;font-weight:700;color:var(--brown)}
+.meeting-meta span{font-size:11px;color:var(--brown-light)}
+.meeting-body{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.meeting-item{display:flex;align-items:flex-start;gap:8px}
+.meeting-item .badge{padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.meeting-item-text{font-size:13px;color:var(--text);font-weight:500;line-height:1.45}
+.meeting-item-note{font-size:12px;color:var(--text3);line-height:1.4;margin-top:2px}
+.meeting-card-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.meeting-card-footer span{font-size:12px;color:var(--text3)}
+.member-chip{padding:3px 9px;background:var(--bg2);border-radius:100px;font-size:11px;color:var(--text2)}
+
+/* ════════════════════════════════
+   MODAL
+════════════════════════════════ */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(45,27,20,0.35);
+  display:none;align-items:flex-end;justify-content:center;z-index:100;
+  backdrop-filter:blur(2px);
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  width:100%;max-width:430px;background:var(--surface);
+  border-radius:24px 24px 0 0;padding:0 0 env(safe-area-inset-bottom,16px);
+  animation:slideup .25s ease;max-height:90svh;overflow-y:auto;
+}
+@keyframes slideup{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 4px}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);padding:8px 20px 16px;display:flex;align-items:center;gap:8px}
+.modal-body{padding:0 20px 20px;display:flex;flex-direction:column;gap:12px}
+.field-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.modal-input{
+  width:100%;padding:11px 14px;border-radius:var(--r-sm);
+  border:1.5px solid var(--border);background:var(--bg);
+  font-size:14px;color:var(--text);
+}
+.modal-input:focus{border-color:var(--pink)}
+.modal-textarea{resize:none;height:80px;line-height:1.5}
+.type-row{display:flex;gap:8px}
+.type-radio{
+  flex:1;padding:10px;border-radius:var(--r-sm);border:1.5px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--text3);background:var(--bg);
+  transition:all .15s;text-align:center;
+}
+.type-radio.sel-movie{background:var(--pink-light);color:var(--pink-deep);border-color:var(--pink)}
+.type-radio.sel-book{background:var(--sage-light);color:#4A7A55;border-color:var(--sage)}
+.modal-save{
+  width:100%;padding:14px;border-radius:var(--r-sm);
+  background:var(--pink-deep);color:#fff;font-size:15px;font-weight:700;
+  box-shadow:0 4px 16px rgba(232,122,155,0.35);transition:transform .1s;
+}
+.modal-save:active{transform:scale(0.98)}
+
+/* toast */
+.toast{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);
+  left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--brown);color:#fff;padding:10px 20px;
+  border-radius:100px;font-size:13px;font-weight:500;
+  opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ════════════════════════════════
+   PAGE 4 — NOTICE BOARD
+════════════════════════════════ */
+.notice-page{padding:16px;gap:10px}
+
+.notice-write-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:13px;border-radius:var(--r-sm);
+  border:1.5px dashed var(--pink);background:transparent;
+  color:var(--pink-deep);font-size:14px;font-weight:600;
+  transition:background .15s;flex-shrink:0;
+}
+.notice-write-btn:hover{background:var(--pink-light)}
+
+.notice-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.notice-tabs::-webkit-scrollbar{display:none}
+
+.notice-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);
+  cursor:pointer;transition:border-color .15s;
+}
+.notice-card:hover{border-color:var(--pink)}
+.notice-card-top{
+  display:flex;align-items:flex-start;gap:10px;padding:14px 16px 10px;
+}
+.notice-pin{font-size:14px;flex-shrink:0;margin-top:1px}
+.notice-category{
+  padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;
+}
+.nc-notice{background:var(--pink-light);color:var(--pink-deep)}
+.nc-vote{background:var(--cream2);color:#8B5A2B}
+.nc-free{background:var(--sage-light);color:#3E6B4A}
+.nc-pinned{background:#E8E0FF;color:#5A3AB0}
+.notice-main{flex:1;min-width:0}
+.notice-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:3px}
+.notice-preview{font-size:12px;color:var(--text3);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.notice-meta{display:flex;align-items:center;gap:8px;padding:0 16px 12px;flex-wrap:wrap}
+.notice-author{font-size:11px;color:var(--text2);font-weight:500}
+.notice-date{font-size:11px;color:var(--text3)}
+.notice-dot{width:3px;height:3px;border-radius:50%;background:var(--border);flex-shrink:0}
+.notice-likes{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px;margin-left:auto}
+
+/* notice detail modal */
+.notice-detail-title{font-size:17px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:6px}
+.notice-detail-meta{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.notice-detail-body{font-size:14px;color:var(--text);line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.notice-divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.like-btn{
+  display:flex;align-items:center;gap:6px;padding:10px 18px;
+  border-radius:100px;border:1.5px solid var(--border);
+  background:var(--bg);font-size:13px;font-weight:600;color:var(--text2);
+  transition:all .15s;
+}
+.like-btn.liked{background:var(--pink-light);color:var(--pink-deep);border-color:var(--pink)}
+
+/* bear SVG inline styles handled in JS */
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-inner">
+      <svg class="bear-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- ears -->
+        <circle cx="18" cy="22" r="12" fill="#C4896B"/>
+        <circle cx="62" cy="22" r="12" fill="#C4896B"/>
+        <circle cx="18" cy="22" r="7" fill="#F4A7BC"/>
+        <circle cx="62" cy="22" r="7" fill="#F4A7BC"/>
+        <!-- head -->
+        <ellipse cx="40" cy="46" rx="28" ry="26" fill="#D4A57A"/>
+        <!-- snout -->
+        <ellipse cx="40" cy="55" rx="12" ry="8" fill="#E8C49A"/>
+        <!-- nose -->
+        <ellipse cx="40" cy="51" rx="5" ry="3.5" fill="#6B3F2A"/>
+        <!-- mouth -->
+        <path d="M35 56 Q40 61 45 56" stroke="#6B3F2A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <!-- eyes -->
+        <circle cx="29" cy="42" r="5" fill="#fff"/>
+        <circle cx="51" cy="42" r="5" fill="#fff"/>
+        <circle cx="30" cy="42" r="3" fill="#2D1B14"/>
+        <circle cx="52" cy="42" r="3" fill="#2D1B14"/>
+        <circle cx="31" cy="41" r="1" fill="#fff"/>
+        <circle cx="53" cy="41" r="1" fill="#fff"/>
+        <!-- blush -->
+        <ellipse cx="23" cy="51" rx="5" ry="3" fill="#F4A7BC" opacity="0.6"/>
+        <ellipse cx="57" cy="51" rx="5" ry="3" fill="#F4A7BC" opacity="0.6"/>
+        <!-- bow -->
+        <path d="M31 29 Q40 24 49 29 Q40 34 31 29Z" fill="#F4A7BC"/>
+        <circle cx="40" cy="29" r="3" fill="#E87A9B"/>
+      </svg>
+      <div class="header-text">
+        <h1>웅성웅성 룰렛 🐻</h1>
+        <p>페미니즘 독서 · 영화 모임</p>
+      </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <div class="tab-item active" id="t0" onclick="goTab(0)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        모임 일정
+      </div>
+      <div class="tab-item" id="t1" onclick="goTab(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        룰렛
+      </div>
+      <div class="tab-item" id="t2" onclick="goTab(2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        모임 기록
+      </div>
+      <div class="tab-item" id="t3" onclick="goTab(3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        공지사항
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 0: HOME / 달력 -->
+  <div class="page active" id="p0">
+    <div class="home-hero">
+      <div class="hero-bear">🐻</div>
+      <div class="hero-copy">
+        <h2>다음 모임은 언제?</h2>
+        <p>날짜를 탭하면<br>그날의 일정을 볼 수 있어요</p>
+      </div>
+    </div>
+
+    <div class="section-label">📅 모임 캘린더</div>
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <h3 id="cal-title"></h3>
+        <div class="cal-nav">
+          <button onclick="moveMonth(-1)">‹</button>
+          <button onclick="moveMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cal-days-header">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <div class="section-label">🗒 선택한 날 일정</div>
+    <div class="event-detail" id="event-detail">
+      <div class="no-event">날짜를 선택하면 일정이 표시돼요 🐾</div>
+    </div>
+
+    <button class="add-event-btn" onclick="openAddModal()">＋ 모임 일정 추가하기</button>
+  </div>
+
+  <!-- PAGE 1: ROULETTE -->
+  <div class="page" id="p1">
+    <div class="roulette-page">
+      <div class="type-toggle">
+        <button class="type-btn on-movie" id="btn-movie" onclick="switchType('movie')">🎬 영화</button>
+        <button class="type-btn" id="btn-book" onclick="switchType('book')">📚 도서</button>
+      </div>
+
+      <div class="canvas-wrap">
+        <div class="ptr"></div>
+        <canvas id="roulette" width="700" height="700"></canvas>
+        <button class="spin-center" id="spin-btn" onclick="spin()">▶</button>
+      </div>
+
+      <div class="result-box" id="result-box">
+        <span class="result-hint">▶ 눌러서 오늘의 픽을 뽑아봐요!</span>
+      </div>
+
+      <div class="list-box">
+        <div class="list-box-header">
+          <span id="list-title">영화 목록</span>
+          <small id="list-count"></small>
+        </div>
+        <div class="items-scroll" id="items-scroll"></div>
+        <div class="add-row">
+          <input type="text" id="new-item" placeholder="제목 추가..." maxlength="28"/>
+          <button onclick="addItem()">추가</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: HISTORY -->
+  <div class="page" id="p2">
+    <div class="history-page" id="history-page">
+      <div class="history-filter">
+        <div class="filter-chip active" onclick="filterHistory('all',this)">전체</div>
+        <div class="filter-chip" onclick="filterHistory('movie',this)">🎬 영화</div>
+        <div class="filter-chip" onclick="filterHistory('book',this)">📚 도서</div>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+
+  <!-- PAGE 3: NOTICE BOARD -->
+  <div class="page" id="p3">
+    <div class="notice-page" id="notice-page" style="display:flex;flex-direction:column;gap:10px">
+      <button class="notice-write-btn" onclick="openNoticeModal()">✏️ 새 글 쓰기</button>
+      <div class="notice-tabs" id="notice-filter-tabs">
+        <div class="filter-chip active" onclick="filterNotice('all',this)">전체</div>
+        <div class="filter-chip" onclick="filterNotice('notice',this)">📢 공지</div>
+        <div class="filter-chip" onclick="filterNotice('vote',this)">🗳 투표</div>
+        <div class="filter-chip" onclick="filterNotice('free',this)">💬 자유</div>
+      </div>
+      <div id="notice-list"></div>
+    </div>
+  </div>
+
+</div><!-- .app -->
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-backdrop" id="modal" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🐻 모임 일정 추가</div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">날짜</div>
+        <input type="date" class="modal-input" id="m-date"/>
+      </div>
+      <div>
+        <div class="field-label">모임 이름</div>
+        <input type="text" class="modal-input" id="m-name" placeholder="예) 웅성웅성 9회 모임"/>
+      </div>
+      <div>
+        <div class="field-label">종류</div>
+        <div class="type-row">
+          <button class="type-radio sel-movie" id="r-movie" onclick="selType('movie')">🎬 영화</button>
+          <button class="type-radio" id="r-book" onclick="selType('book')">📚 도서</button>
+          <button class="type-radio" id="r-both" onclick="selType('both')">🎬📚 둘 다</button>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">작품 제목</div>
+        <input type="text" class="modal-input" id="m-title" placeholder="예) 82년생 김지영"/>
+      </div>
+      <div>
+        <div class="field-label">메모 (선택)</div>
+        <textarea class="modal-input modal-textarea" id="m-memo" placeholder="장소, 시간, 할 이야기 등..."></textarea>
+      </div>
+      <div>
+        <div class="field-label">참여 멤버 (쉼표로 구분)</div>
+        <input type="text" class="modal-input" id="m-members" placeholder="예) 지은, 수현, 민아"/>
+      </div>
+      <button class="modal-save" onclick="saveEvent()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE WRITE MODAL -->
+<div class="modal-backdrop" id="notice-modal" onclick="closeNoticeModalOut(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ 새 글 쓰기</div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">카테고리</div>
+        <div class="type-row">
+          <button class="type-radio sel-movie" id="nc-notice" onclick="selNoticeCategory('notice')">📢 공지</button>
+          <button class="type-radio" id="nc-vote" onclick="selNoticeCategory('vote')">🗳 투표</button>
+          <button class="type-radio" id="nc-free" onclick="selNoticeCategory('free')">💬 자유</button>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">제목</div>
+        <input type="text" class="modal-input" id="n-title" placeholder="제목을 입력하세요" maxlength="50"/>
+      </div>
+      <div>
+        <div class="field-label">내용</div>
+        <textarea class="modal-input modal-textarea" id="n-body" placeholder="내용을 입력하세요..." style="height:120px"></textarea>
+      </div>
+      <div>
+        <div class="field-label">작성자</div>
+        <input type="text" class="modal-input" id="n-author" placeholder="닉네임 입력" maxlength="10"/>
+      </div>
+      <button class="modal-save" onclick="saveNotice()">등록하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE DETAIL MODAL -->
+<div class="modal-backdrop" id="notice-detail-modal" onclick="closeNoticeDetailOut(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body" id="notice-detail-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── DATA ── */
+const WHEEL_COLORS = [
+  ['#F4A7BC','#C45A7E'],['#8AAE92','#3E6B4A'],['#D4A57A','#8B5A2B'],
+  ['#A7C4F4','#3A6BB0'],['#F4C4A7','#B05A2A'],['#C4A7F4','#6A3AB0'],
+  ['#A7F4C4','#2A8B5A'],['#F4A7A7','#B03A3A'],['#F4E2A7','#B08A2A'],
+  ['#A7E2F4','#2A8AB0'],['#E2A7F4','#8A2AB0'],['#A7F4E2','#2AB08A']
+];
+
+let meetings = JSON.parse(localStorage.getItem('wsMeetings')||'null') || [
+  {
+    id:1, date:'2024-11-16', name:'웅성웅성 7회 모임', type:'book',
+    title:'82년생 김지영', memo:'카페 하하에서 14시, 불꽃 튀는 토론 예정',
+    members:['지은','수현','민아','혜린']
+  },
+  {
+    id:2, date:'2024-12-14', name:'웅성웅성 8회 모임', type:'movie',
+    title:'아이 캔 스피크', memo:'온라인 모임 zoom 링크 공유 예정',
+    members:['지은','수현','민아','혜린','보미']
+  },
+  {
+    id:3, date:'2025-01-18', name:'웅성웅성 9회 모임', type:'both',
+    title:'채식주의자 + 우리들의 블루스', memo:'새해 첫 모임! 떡국 먹으면서',
+    members:['지은','수현','혜린']
+  },
+  {
+    id:4, date:'2025-03-08', name:'웅성웅성 10회 모임 (세계 여성의 날)', type:'movie',
+    title:'히든 피겨스', memo:'여성의 날 기념 특별 상영', members:['지은','수현','민아','혜린','보미','채린']
+  },
+  {
+    id:5, date:'2025-05-17', name:'웅성웅성 11회 모임', type:'book',
+    title:'아몬드', memo:'', members:['지은','수현','민아']
+  },
+];
+saveMeetings();
+
+function saveMeetings(){localStorage.setItem('wsMeetings',JSON.stringify(meetings))}
+
+let lists = JSON.parse(localStorage.getItem('wsLists')||'null') || {
+  movie:['아이 캔 스피크','히든 피겨스','82년생 김지영','세 번의 결혼','윤희에게','미나리','마마 미아'],
+  book:['채식주의자','82년생 김지영','아몬드','달러구트 꿈 백화점','파친코','우리가 빛의 속도로 갈 수 없다면']
+};
+function saveLists(){localStorage.setItem('wsLists',JSON.stringify(lists))}
+
+/* ── TABS ── */
+let currentTab = 0;
+function goTab(n){
+  currentTab = n;
+  document.querySelectorAll('.tab-item').forEach((el,i)=>el.classList.toggle('active',i===n));
+  document.querySelectorAll('.page').forEach((el,i)=>el.classList.toggle('active',i===n));
+  if(n===2) renderHistory('all');
+  if(n===3) renderNotices();
+}
+
+/* ── CALENDAR ── */
+const today = new Date();
+let calYear = today.getFullYear(), calMonth = today.getMonth();
+let selectedDate = null;
+
+function moveMonth(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}renderCal()}
+
+function renderCal(){
+  const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = calYear+'년 '+months[calMonth];
+  const first = new Date(calYear,calMonth,1).getDay();
+  const days = new Date(calYear,calMonth+1,0).getDate();
+  const grid = document.getElementById('cal-grid');
+  const eventDates = new Set(meetings.map(m=>m.date));
+  let html='';
+  for(let i=0;i<first;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = calYear===today.getFullYear()&&calMonth===today.getMonth()&&d===today.getDate();
+    const isSel = ds===selectedDate;
+    const dow=(first+d-1)%7;
+    let cls='cal-cell';
+    if(dow===0)cls+=' sun';if(dow===6)cls+=' sat';
+    if(isToday&&!isSel)cls+=' today';
+    if(isSel)cls+=' selected';
+    if(eventDates.has(ds))cls+=' has-event';
+    html+=`<div class="${cls}" onclick="selectDate('${ds}')">${d}</div>`;
+  }
+  grid.innerHTML=html;
+  renderEventDetail();
+}
+
+function selectDate(ds){
+  selectedDate=ds;
+  renderCal();
+  renderEventDetail();
+}
+
+function renderEventDetail(){
+  const box=document.getElementById('event-detail');
+  if(!selectedDate){box.innerHTML='<div class="no-event">날짜를 선택하면 일정이 표시돼요 🐾</div>';return}
+  const evs=meetings.filter(m=>m.date===selectedDate);
+  const [y,mo,d]=selectedDate.split('-');
+  const dateLabel=`${y}년 ${parseInt(mo)}월 ${parseInt(d)}일`;
+  if(!evs.length){
+    box.innerHTML=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${dateLabel}</h4></div><div class="no-event">등록된 일정이 없어요</div>`;
+    return;
+  }
+  let html=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${evs[0].name}</h4><span>${dateLabel}</span></div><div class="event-list">`;
+  evs.forEach(e=>{
+    const badges = e.type==='both'
+      ? '<span class="event-badge badge-movie">영화</span><span class="event-badge badge-book">도서</span>'
+      : e.type==='movie'
+        ? '<span class="event-badge badge-movie">🎬 영화</span>'
+        : '<span class="event-badge badge-book">📚 도서</span>';
+    html+=`<div class="event-row">${badges}<div><div class="event-title">${esc(e.title)}</div>${e.memo?`<div class="event-memo">${esc(e.memo)}</div>`:''}</div></div>`;
+  });
+  html+='</div>';
+  box.innerHTML=html;
+}
+
+/* ── ADD EVENT MODAL ── */
+let modalType='movie';
+function openAddModal(){
+  const d = selectedDate||today.toISOString().slice(0,10);
+  document.getElementById('m-date').value=d;
+  document.getElementById('m-name').value='';
+  document.getElementById('m-title').value='';
+  document.getElementById('m-memo').value='';
+  document.getElementById('m-members').value='';
+  modalType='movie';
+  document.getElementById('r-movie').className='type-radio sel-movie';
+  document.getElementById('r-book').className='type-radio';
+  document.getElementById('r-both').className='type-radio';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModalOut(e){if(e.target===document.getElementById('modal')) document.getElementById('modal').classList.remove('open')}
+function selType(t){
+  modalType=t;
+  document.getElementById('r-movie').className='type-radio'+(t==='movie'?' sel-movie':'');
+  document.getElementById('r-book').className='type-radio'+(t==='book'?' sel-book':'');
+  document.getElementById('r-both').className='type-radio'+(t==='both'?' sel-book':'');
+}
+function saveEvent(){
+  const date=document.getElementById('m-date').value;
+  const name=document.getElementById('m-name').value.trim();
+  const title=document.getElementById('m-title').value.trim();
+  const memo=document.getElementById('m-memo').value.trim();
+  const members=document.getElementById('m-members').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!date||!name||!title){showToast('날짜, 모임 이름, 작품 제목은 필수예요');return}
+  meetings.push({id:Date.now(),date,name,type:modalType,title,memo,members});
+  meetings.sort((a,b)=>a.date.localeCompare(b.date));
+  saveMeetings();
+  document.getElementById('modal').classList.remove('open');
+  selectedDate=date;
+  renderCal();
+  showToast('일정이 추가됐어요! 🐻');
+}
+
+/* ── ROULETTE ── */
+let rType='movie', rAngle=0, rSpinning=false;
+
+function switchType(t){
+  rType=t;
+  document.getElementById('btn-movie').className='type-btn'+(t==='movie'?' on-movie':'');
+  document.getElementById('btn-book').className='type-btn'+(t==='book'?' on-book':'');
+  document.getElementById('list-title').textContent = t==='movie'?'영화 목록':'도서 목록';
+  document.getElementById('result-box').innerHTML='<span class="result-hint">▶ 눌러서 오늘의 픽을 뽑아봐요!</span>';
+  rAngle=0; renderItems(); drawWheel();
+}
+
+function renderItems(){
+  const list=lists[rType];
+  document.getElementById('list-count').textContent=list.length+'/16';
+  document.getElementById('items-scroll').innerHTML=list.map((it,i)=>`
+    <div class="item-row">
+      <div class="item-dot" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length][0]}"></div>
+      <span class="item-name">${esc(it)}</span>
+      <button class="item-del" onclick="removeItem(${i})">×</button>
+    </div>`).join('');
+}
+
+function addItem(){
+  const inp=document.getElementById('new-item');
+  const v=inp.value.trim();
+  if(!v) return;
+  if(lists[rType].length>=16){showToast('최대 16개까지만 추가할 수 있어요');return}
+  lists[rType].push(v); inp.value='';
+  saveLists(); renderItems(); drawWheel();
+}
+
+function removeItem(i){
+  if(lists[rType].length<=2){showToast('최소 2개는 있어야 해요');return}
+  lists[rType].splice(i,1);
+  saveLists(); renderItems(); drawWheel();
+}
+
+document.getElementById('new-item').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});
+
+function drawWheel(hi=-1){
+  const cv=document.getElementById('roulette');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2,r=W/2-8;
+  const list=lists[rType],n=list.length,arc=2*Math.PI/n;
+  ctx.clearRect(0,0,W,H);
+
+  // outer ring
+  ctx.beginPath();ctx.arc(cx,cy,r+4,0,2*Math.PI);
+  ctx.fillStyle='#F4A7BC';ctx.fill();
+
+  for(let i=0;i<n;i++){
+    const s=rAngle+i*arc,e=s+arc;
+    const [bg,fg]=WHEEL_COLORS[i%WHEEL_COLORS.length];
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,e);ctx.closePath();
+    ctx.fillStyle=hi===i?fg:bg;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(s+arc/2);ctx.textAlign='right';
+    const fs=n<=5?20:n<=8?17:n<=12?14:11;
+    ctx.font=`700 ${fs}px 'Apple SD Gothic Neo',sans-serif`;
+    ctx.fillStyle=hi===i?'#fff':fg;
+    let tx=list[i];const mw=r*0.7;
+    if(ctx.measureText(tx).width>mw){while(ctx.measureText(tx+'…').width>mw&&tx.length)tx=tx.slice(0,-1);tx+='…'}
+    ctx.fillText(tx,r-20,fs*0.38);
+    ctx.restore();
+  }
+
+  // center circle
+  ctx.beginPath();ctx.arc(cx,cy,40,0,2*Math.PI);
+  ctx.fillStyle='#fff';ctx.fill();
+  ctx.strokeStyle='#F4A7BC';ctx.lineWidth=3;ctx.stroke();
+  // bear face in center
+  ctx.font='36px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🐻',cx,cy);
+}
+
+function spin(){
+  if(rSpinning||lists[rType].length<2) return;
+  rSpinning=true;
+  document.getElementById('spin-btn').textContent='⏸';
+  document.getElementById('result-box').innerHTML='<span class="result-hint">두구두구두구... 🐾</span>';
+  const n=lists[rType].length,arc=2*Math.PI/n;
+  const extra=(7+Math.random()*5)*2*Math.PI;
+  const ri=Math.floor(Math.random()*n);
+  const target=extra+(2*Math.PI-(rAngle%(2*Math.PI)))+(2*Math.PI-ri*arc)+arc/2;
+  const dur=3600+Math.random()*900;
+  const t0=performance.now(),a0=rAngle;
+  function ease(t){return 1-Math.pow(1-t,4)}
+  function frame(now){
+    const t=Math.min((now-t0)/dur,1);
+    rAngle=a0+target*ease(t);
+    drawWheel();
+    if(t<1){requestAnimationFrame(frame);return}
+    rAngle=rAngle%(2*Math.PI);
+    const ptr=3*Math.PI/2;
+    const norm=((ptr-rAngle)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+    const idx=Math.floor(norm/arc)%n;
+    drawWheel(idx);
+    const em=rType==='movie'?'🎬':'📚';
+    document.getElementById('result-box').innerHTML=`<div><span class="result-emoji">${em}</span><div class="result-picked">${esc(lists[rType][idx])}</div></div>`;
+    rSpinning=false;
+    document.getElementById('spin-btn').textContent='▶';
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ── HISTORY ── */
+let histFilter='all';
+function filterHistory(f,el){
+  histFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory(f);
+}
+
+function renderHistory(f){
+  const list=[...meetings].reverse().filter(m=>f==='all'||m.type===f||m.type==='both');
+  const container=document.getElementById('history-list');
+  if(!list.length){container.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:14px">기록이 없어요 🐻</div>';return}
+  container.innerHTML=list.map(m=>{
+    const [y,mo,d]=m.date.split('-');
+    const dl=`${y}.${mo}.${d}`;
+    const badge = m.type==='both'
+      ? '<span class="badge badge-movie">🎬</span><span class="badge badge-book">📚</span>'
+      : m.type==='movie'
+        ? '<span class="badge badge-movie">🎬 영화</span>'
+        : '<span class="badge badge-book">📚 도서</span>';
+    const members=m.members&&m.members.length
+      ? m.members.map(mb=>`<span class="member-chip">${esc(mb)}</span>`).join('')
+      : '';
+    return `<div class="meeting-card">
+      <div class="meeting-card-header">
+        <span class="bear-tiny">🐻</span>
+        <div class="meeting-meta"><h4>${esc(m.name)}</h4><span>${dl}</span></div>
+      </div>
+      <div class="meeting-body">
+        <div class="meeting-item">
+          <div style="display:flex;gap:4px;flex-wrap:wrap">${badge}</div>
+          <div><div class="meeting-item-text">${esc(m.title)}</div>${m.memo?`<div class="meeting-item-note">${esc(m.memo)}</div>`:''}</div>
+        </div>
+      </div>
+      ${members?`<div class="meeting-card-footer"><span>참여:</span>${members}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ── NOTICE BOARD ── */
+let notices = JSON.parse(localStorage.getItem('wsNotices')||'null') || [
+  {id:1,category:'notice',title:'웅성웅성 모임 규칙 안내',body:'안녕하세요 모임원 여러분!\n\n웅성웅성 모임에 오신 것을 환영해요 🐻\n\n📌 모임 규칙\n1. 서로의 의견을 존중해요\n2. 스포일러는 미리 알려주기\n3. 모임 3일 전까지 불참 알려주기\n4. 즐겁게 이야기 나눠요!',author:'운영진',date:'2025-01-05',pinned:true,likes:5,likedByMe:false},
+  {id:2,category:'vote',title:'다음 모임 장소 투표 🗳',body:'다음 12회 모임 장소 의견 받아요!\n\nA. 종로 카페 씨앗\nB. 홍대 북카페 책밥\nC. 온라인 줌 (zoom)\n\n댓글로 A/B/C 남겨주세요!',author:'지은',date:'2025-06-01',pinned:false,likes:3,likedByMe:false},
+  {id:3,category:'free',title:'아몬드 읽고 나서 생각이 멈추질 않아요',body:'어제 밤새 아몬드 다 읽었는데 감정 표현을 못 하는 주인공이 오히려 저한테 감정을 막 쏟아내는 느낌이었어요. 다음 모임에서 많이 이야기 나누고 싶어요 🥺',author:'수현',date:'2025-05-20',pinned:false,likes:7,likedByMe:false},
+  {id:4,category:'notice',title:'6월 모임 일정 확정!',body:'📅 일시: 6월 28일 (토) 오후 2시\n📍 장소: 종로 카페 씨앗\n📖 작품: 우리가 빛의 속도로 갈 수 없다면\n\n참석 여부 댓글로 남겨주세요!',author:'운영진',date:'2025-06-10',pinned:false,likes:4,likedByMe:false},
+];
+function saveNotices(){localStorage.setItem('wsNotices',JSON.stringify(notices))}
+
+let noticeCatFilter='all';
+let noticeCategory='notice';
+let viewingNoticeId=null;
+
+function filterNotice(f,el){
+  noticeCatFilter=f;
+  document.querySelectorAll('#notice-filter-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderNotices();
+}
+
+function renderNotices(){
+  const list=notices
+    .filter(n=>noticeCatFilter==='all'||n.category===noticeCatFilter)
+    .sort((a,b)=>(b.pinned-a.pinned)||(b.id-a.id));
+  const container=document.getElementById('notice-list');
+  if(!list.length){container.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:14px">게시글이 없어요 🐻</div>';return}
+  const catMap={notice:['📢 공지','nc-notice'],vote:['🗳 투표','nc-vote'],free:['💬 자유','nc-free']};
+  container.innerHTML=list.map(n=>{
+    const [label,cls]=catMap[n.category]||['기타','nc-free'];
+    const pin=n.pinned?'📌 ':'';
+    const preview=n.body.replace(/\n/g,' ').slice(0,60)+(n.body.length>60?'…':'');
+    return `<div class="notice-card" onclick="openNoticeDetail(${n.id})">
+      <div class="notice-card-top">
+        ${n.pinned?'<span class="notice-pin">📌</span>':''}
+        <div class="notice-main">
+          <div class="notice-title">${esc(n.title)}</div>
+          <div class="notice-preview">${esc(preview)}</div>
+        </div>
+        <span class="notice-category ${cls}">${label}</span>
+      </div>
+      <div class="notice-meta">
+        <span class="notice-author">🐾 ${esc(n.author)}</span>
+        <span class="notice-dot"></span>
+        <span class="notice-date">${n.date}</span>
+        <span class="notice-likes">🤍 ${n.likes}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNoticeDetail(id){
+  const n=notices.find(x=>x.id===id);
+  if(!n) return;
+  viewingNoticeId=id;
+  const catMap={notice:['📢 공지','nc-notice'],vote:['🗳 투표','nc-vote'],free:['💬 자유','nc-free']};
+  const [label,cls]=catMap[n.category]||['기타','nc-free'];
+  const bodyHtml=esc(n.body).replace(/\n/g,'<br>');
+  document.getElementById('notice-detail-content').innerHTML=`
+    <div style="padding:4px 0 16px">
+      <span class="notice-category ${cls}" style="margin-bottom:10px;display:inline-block">${label}</span>
+      <div class="notice-detail-title">${esc(n.title)}</div>
+      <div class="notice-detail-meta">
+        <span class="notice-author">🐾 ${esc(n.author)}</span>
+        <span class="notice-dot"></span>
+        <span class="notice-date">${n.date}</span>
+      </div>
+      <hr class="notice-divider"/>
+      <div class="notice-detail-body">${bodyHtml}</div>
+      <hr class="notice-divider"/>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <button class="like-btn${n.likedByMe?' liked':''}" onclick="toggleLike(${n.id})">
+          ${n.likedByMe?'🩷':'🤍'} 좋아요 ${n.likes}
+        </button>
+        ${n.pinned?'':'<button onclick="deleteNotice('+n.id+')" style="font-size:12px;color:var(--text3);padding:8px">삭제</button>'}
+      </div>
+    </div>`;
+  document.getElementById('notice-detail-modal').classList.add('open');
+}
+
+function closeNoticeDetailOut(e){if(e.target===document.getElementById('notice-detail-modal')) document.getElementById('notice-detail-modal').classList.remove('open')}
+
+function toggleLike(id){
+  const n=notices.find(x=>x.id===id);
+  if(!n) return;
+  n.likedByMe=!n.likedByMe;
+  n.likes+=n.likedByMe?1:-1;
+  saveNotices();
+  openNoticeDetail(id);
+  renderNotices();
+}
+
+function deleteNotice(id){
+  notices=notices.filter(x=>x.id!==id);
+  saveNotices();
+  document.getElementById('notice-detail-modal').classList.remove('open');
+  renderNotices();
+  showToast('게시글을 삭제했어요');
+}
+
+function openNoticeModal(){
+  noticeCategory='notice';
+  document.getElementById('n-title').value='';
+  document.getElementById('n-body').value='';
+  document.getElementById('n-author').value='';
+  document.getElementById('nc-notice').className='type-radio sel-movie';
+  document.getElementById('nc-vote').className='type-radio';
+  document.getElementById('nc-free').className='type-radio';
+  document.getElementById('notice-modal').classList.add('open');
+}
+
+function closeNoticeModalOut(e){if(e.target===document.getElementById('notice-modal')) document.getElementById('notice-modal').classList.remove('open')}
+
+function selNoticeCategory(c){
+  noticeCategory=c;
+  document.getElementById('nc-notice').className='type-radio'+(c==='notice'?' sel-movie':'');
+  document.getElementById('nc-vote').className='type-radio'+(c==='vote'?' sel-book':'');
+  document.getElementById('nc-free').className='type-radio'+(c==='free'?' sel-book':'');
+}
+
+function saveNotice(){
+  const title=document.getElementById('n-title').value.trim();
+  const body=document.getElementById('n-body').value.trim();
+  const author=document.getElementById('n-author').value.trim()||'익명';
+  if(!title||!body){showToast('제목과 내용은 필수예요');return}
+  const today2=new Date().toISOString().slice(0,10);
+  notices.unshift({id:Date.now(),category:noticeCategory,title,body,author,date:today2,pinned:false,likes:0,likedByMe:false});
+  saveNotices();
+  document.getElementById('notice-modal').classList.remove('open');
+  renderNotices();
+  showToast('게시글이 등록됐어요! 🐻');
+}
+
+/* ── UTILS ── */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ── INIT ── */
+renderCal();
+renderItems(); drawWheel();
+renderHistory('all');
+renderNotices();
+</script>
+</body>
+</html>
