@@ -619,11 +619,28 @@ const WHEEL_COLORS = [
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwW55uU3GVDg8PeUEQ0bt2plBKF7Yo07xoEclyziMXwSNdTFHu7VtJyU2NX7h8HFV0YQQ/exec';
 
 let meetings = [];
-let lists = JSON.parse(localStorage.getItem('wsLists')||'null') || {
-  movie:['아이 캔 스피크','히든 피겨스','82년생 김지영','세 번의 결혼','윤희에게','미나리','마마 미아'],
-  book:['채식주의자','82년생 김지영','아몬드','달러구트 꿈 백화점','파친코','우리가 빛의 속도로 갈 수 없다면']
-};
-function saveLists(){localStorage.setItem('wsLists',JSON.stringify(lists))}
+let lists = { movie: [], book: [] };
+let listsLoading = true;
+
+async function loadRouletteItems(){
+  try{
+    listsLoading = true;
+    renderItems();
+    const res = await apiGet('getRouletteItems');
+    if(res.ok){
+      lists.movie = res.items.filter(it=>it.type==='movie').map(it=>it.title);
+      lists.book = res.items.filter(it=>it.type==='book').map(it=>it.title);
+    }else{
+      showToast('노션 목록 불러오기 실패 😢');
+    }
+  }catch(e){
+    showToast('노션 연결 실패 😢');
+  }finally{
+    listsLoading = false;
+    renderItems();
+    drawWheel();
+  }
+}
 
 /* ── GOOGLE SHEETS API ── */
 async function apiGet(action){
@@ -801,26 +818,35 @@ function switchType(t){
 function renderItems(){
   const list=lists[rType];
   document.getElementById('list-count').textContent=list.length+'/16';
+  if(listsLoading){
+    document.getElementById('items-scroll').innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px">노션에서 불러오는 중... 🐻</div>';
+    return;
+  }
+  if(!list.length){
+    document.getElementById('items-scroll').innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px">목록이 비어있어요</div>';
+    return;
+  }
   document.getElementById('items-scroll').innerHTML=list.map((it,i)=>`
     <div class="item-row">
       <div class="item-dot" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length][0]}"></div>
       <span class="item-name">${esc(it)}</span>
-      <button class="item-del" onclick="removeItem(${i})">×</button>
     </div>`).join('');
 }
 
-function addItem(){
+async function addItem(){
   const inp=document.getElementById('new-item');
   const v=inp.value.trim();
   if(!v) return;
   if(lists[rType].length>=16){showToast('최대 16개까지만 추가할 수 있어요');return}
-  lists[rType].push(v); inp.value='';
-  saveLists(); renderItems(); drawWheel();
-}
-
-function removeItem(i){
-  lists[rType].splice(i,1);
-  saveLists(); renderItems(); drawWheel();
+  inp.value='';
+  showToast('노션에 추가하는 중... 🐻');
+  try{
+    await apiPost({action:'addRouletteItem',title:v,type:rType});
+    showToast('노션에 추가됐어요! 🐻');
+    await loadRouletteItems();
+  }catch(e){
+    showToast('추가 실패 😢');
+  }
 }
 
 document.getElementById('new-item').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});
@@ -1145,9 +1171,10 @@ function showToast(msg){
 
 /* ── INIT ── */
 renderCal();
-renderItems(); drawWheel();
+drawWheel();
 loadMeetings();
 loadNotices();
+loadRouletteItems();
 </script>
 </body>
 </html>
