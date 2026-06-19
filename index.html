@@ -12,7 +12,7 @@
 <style>
 /* ── reset & base ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overscroll-behavior:none;background:#FFF5F7;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+html,body{height:100%;overscroll-behavior:none;background:#FAFCFF;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
 input{font-family:inherit;outline:none}
 
@@ -50,7 +50,7 @@ input{font-family:inherit;outline:none}
   border-bottom:1px solid var(--border);
 }
 .header-inner{display:flex;align-items:center;gap:10px;padding-bottom:14px}
-.bear-logo{width:44px;height:44px;flex-shrink:0;object-fit:contain}
+.bear-logo{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1}
 .header-text h1{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .header-text p{font-size:11px;color:var(--text3);margin-top:1px}
 
@@ -82,7 +82,7 @@ input{font-family:inherit;outline:none}
    PAGE 1 — HOME (달력)
 ════════════════════════════════ */
 .home-hero{
-  background:linear-gradient(160deg,#FEF9CC 0%,#E8F5FF 100%);
+  background:linear-gradient(160deg,#FEF9CC 0%,#EAF6FF 100%);
   padding:20px 20px 0;
   display:flex;align-items:center;gap:14px;
 }
@@ -101,7 +101,7 @@ input{font-family:inherit;outline:none}
 .cal-nav button:hover{background:var(--bg2)}
 .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0 8px 6px}
 .cal-days-header span{font-size:11px;font-weight:600;color:var(--text3)}
-.cal-days-header span:first-child{color:#E87A9B}
+.cal-days-header span:first-child{color:#E87050}
 .cal-days-header span:last-child{color:#7BA7D8}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 8px 12px;gap:2px}
 .cal-cell{
@@ -109,10 +109,10 @@ input{font-family:inherit;outline:none}
   flex-direction:column;border-radius:50%;font-size:13px;color:var(--text);
   position:relative;cursor:pointer;transition:background .12s;
 }
-.cal-cell:hover{background:var(--pink-light)}
+.cal-cell:hover{background:#FEF5C0}
 .cal-cell.empty{cursor:default}
 .cal-cell.empty:hover{background:none}
-.cal-cell.sun{color:#E87A9B}
+.cal-cell.sun{color:#E87050}
 .cal-cell.sat{color:#7BA7D8}
 .cal-cell.today{background:#FEF5C0;font-weight:700;color:#B89000}
 .cal-cell.has-event::after{
@@ -128,7 +128,7 @@ input{font-family:inherit;outline:none}
   border:1px solid var(--border);overflow:hidden;
 }
 .event-detail-header{
-  background:#FEF9CC;padding:12px 16px;
+  background:linear-gradient(90deg,#FEF9CC,#EAF6FF);padding:12px 16px;
   display:flex;align-items:center;gap:8px;
 }
 .event-detail-header .bear-sm{font-size:20px}
@@ -188,7 +188,7 @@ input{font-family:inherit;outline:none}
   background:var(--surface);border:2.5px solid var(--border);
   display:flex;align-items:center;justify-content:center;
   font-size:28px;z-index:10;
-  box-shadow:0 2px 12px rgba(180,80,100,0.12);
+  box-shadow:0 2px 12px rgba(90,160,210,0.15);
   transition:transform .1s;
 }
 .spin-center:active{transform:translate(-50%,-50%) scale(0.93)}
@@ -214,7 +214,7 @@ input{font-family:inherit;outline:none}
 .item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .item-name{flex:1;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item-del{color:var(--text3);font-size:17px;line-height:1;padding:0 2px}
-.item-del:hover{color:#E87A9B}
+.item-del:hover{color:#E87050}
 
 .add-row{display:flex;gap:6px}
 .add-row input{
@@ -254,7 +254,7 @@ input{font-family:inherit;outline:none}
 .meeting-card-header{
   display:flex;align-items:center;gap:10px;padding:14px 16px;
   border-bottom:1px solid var(--border);
-  background:linear-gradient(90deg,#FEF9CC,#E8F5FF);
+  background:linear-gradient(90deg,#FEF9CC,#EAF6FF);
 }
 .meeting-card-header .bear-tiny{font-size:22px}
 .meeting-meta h4{font-size:14px;font-weight:700;color:var(--brown)}
@@ -341,7 +341,7 @@ input{font-family:inherit;outline:none}
   border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);
   cursor:pointer;transition:border-color .15s;
 }
-.notice-card:hover{border-color:var(--pink)}
+.notice-card:hover{border-color:#7BBCE0}
 .notice-card-top{
   display:flex;align-items:flex-start;gap:10px;padding:14px 16px 10px;
 }
@@ -404,49 +404,9 @@ input{font-family:inherit;outline:none}
   <!-- HEADER -->
   <div class="header">
     <div class="header-inner">
-      <svg class="bear-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- outer ears -->
-        <circle cx="20" cy="20" r="13" fill="#E8B89A"/>
-        <circle cx="60" cy="20" r="13" fill="#E8B89A"/>
-        <!-- inner ears -->
-        <circle cx="20" cy="20" r="8" fill="#F4C4D4"/>
-        <circle cx="60" cy="20" r="8" fill="#F4C4D4"/>
-        <!-- head -->
-        <ellipse cx="40" cy="47" rx="27" ry="25" fill="#F0C8A0"/>
-        <!-- forehead shine -->
-        <ellipse cx="33" cy="34" rx="5" ry="3" fill="#FDE8D0" opacity="0.7" transform="rotate(-20 33 34)"/>
-        <!-- snout -->
-        <ellipse cx="40" cy="56" rx="13" ry="9" fill="#FCDEC0"/>
-        <!-- nose -->
-        <ellipse cx="40" cy="50" rx="5.5" ry="4" fill="#3D2010"/>
-        <!-- nostril dots -->
-        <circle cx="38" cy="50" r="1.2" fill="#5A3020"/>
-        <circle cx="42" cy="50" r="1.2" fill="#5A3020"/>
-        <!-- cute smile -->
-        <path d="M34 56 Q40 62 46 56" stroke="#3D2010" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <!-- smile dimples -->
-        <path d="M34 56 Q32 54 33 52" stroke="#3D2010" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-        <path d="M46 56 Q48 54 47 52" stroke="#3D2010" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-        <!-- eyes - big sparkly -->
-        <ellipse cx="29" cy="42" rx="6" ry="6.5" fill="#3D2010"/>
-        <ellipse cx="51" cy="42" rx="6" ry="6.5" fill="#3D2010"/>
-        <!-- eye whites / sparkle -->
-        <circle cx="31" cy="39.5" r="2.5" fill="white"/>
-        <circle cx="53" cy="39.5" r="2.5" fill="white"/>
-        <circle cx="27.5" cy="43.5" r="1.2" fill="white" opacity="0.6"/>
-        <circle cx="49.5" cy="43.5" r="1.2" fill="white" opacity="0.6"/>
-        <!-- blush -->
-        <ellipse cx="21" cy="52" rx="6" ry="4" fill="#F4A7BC" opacity="0.55"/>
-        <ellipse cx="59" cy="52" rx="6" ry="4" fill="#F4A7BC" opacity="0.55"/>
-        <!-- tiny heart on forehead -->
-        <path d="M38 28 C38 26 40 25 40 27 C40 25 42 26 42 28 C42 30 40 32 40 32 C40 32 38 30 38 28Z" fill="#F4A7BC"/>
-        <!-- ribbon/bow on ear -->
-        <path d="M53 10 Q60 6 67 10 Q60 14 53 10Z" fill="#F4A7BC"/>
-        <path d="M53 10 Q60 14 67 10 Q60 18 53 10Z" fill="#E87A9B" opacity="0.6"/>
-        <circle cx="60" cy="10" r="3" fill="#E87A9B"/>
-      </svg>
+      <span class="bear-logo" aria-label="곰">🐻</span>
       <div class="header-text">
-        <h1>웅성웅성 🐻</h1>
+        <h1>웅성웅성</h1>
         <p>페미니즘 독서 · 영화 모임</p>
       </div>
     </div>
@@ -475,7 +435,7 @@ input{font-family:inherit;outline:none}
   <!-- PAGE 0: HOME / 달력 -->
   <div class="page active" id="p0">
     <div class="home-hero">
-      <div class="hero-bear">🧸</div>
+      <div class="hero-bear">🐻</div>
       <div class="hero-copy">
         <h2>다음 모임은 언제?</h2>
         <p>날짜를 탭하면<br>그날의 일정을 볼 수 있어요</p>
@@ -650,10 +610,10 @@ input{font-family:inherit;outline:none}
 <script>
 /* ── DATA ── */
 const WHEEL_COLORS = [
-  ['#F4A7BC','#C45A7E'],['#8AAE92','#3E6B4A'],['#D4A57A','#8B5A2B'],
-  ['#A7C4F4','#3A6BB0'],['#F4C4A7','#B05A2A'],['#C4A7F4','#6A3AB0'],
-  ['#A7F4C4','#2A8B5A'],['#F4A7A7','#B03A3A'],['#F4E2A7','#B08A2A'],
-  ['#A7E2F4','#2A8AB0'],['#E2A7F4','#8A2AB0'],['#A7F4E2','#2AB08A']
+  ['#FEF5C0','#B89000'],['#D4ECFA','#2A6A90'],['#FFF0A0','#9A7800'],
+  ['#B8DFF5','#1A5A8A'],['#FEF9CC','#8A7000'],['#E8F5FF','#2A5A80'],
+  ['#FFFACC','#7A6800'],['#D0EEFF','#1A4A7A'],['#FEF3A0','#8A7200'],
+  ['#C8E8FF','#1A528A'],['#FEFAAA','#8A7500'],['#D8F0FF','#1A4E88']
 ];
 
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwW55uU3GVDg8PeUEQ0bt2plBKF7Yo07xoEclyziMXwSNdTFHu7VtJyU2NX7h8HFV0YQQ/exec';
@@ -874,7 +834,7 @@ function drawWheel(hi=-1){
 
   // outer ring
   ctx.beginPath();ctx.arc(cx,cy,r+4,0,2*Math.PI);
-  ctx.fillStyle='#F4A7BC';ctx.fill();
+  ctx.fillStyle='#F7D96A';ctx.fill();
 
   for(let i=0;i<n;i++){
     const s=rAngle+i*arc,e=s+arc;
@@ -896,7 +856,7 @@ function drawWheel(hi=-1){
   // center circle
   ctx.beginPath();ctx.arc(cx,cy,40,0,2*Math.PI);
   ctx.fillStyle='#fff';ctx.fill();
-  ctx.strokeStyle='#F4A7BC';ctx.lineWidth=3;ctx.stroke();
+  ctx.strokeStyle='#7BBCE0';ctx.lineWidth=3;ctx.stroke();
   // bear face in center
   ctx.font='36px serif';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText('🐻',cx,cy);
