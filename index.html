@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="웅성웅성"/>
 <meta name="theme-color" content="#FDFBF0"/>
 <title>웅성웅성</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 /* ── reset & base ── */
@@ -41,6 +42,31 @@ input{font-family:inherit;outline:none}
 
 /* ── layout ── */
 .app{display:flex;flex-direction:column;height:100svh;max-width:430px;margin:0 auto;position:relative;background:var(--bg)}
+
+/* ── login gate ── */
+.login-gate{
+  display:flex;align-items:center;justify-content:center;
+  height:100svh;max-width:430px;margin:0 auto;
+  background:linear-gradient(160deg,#FEF9CC 0%,#EAF6FF 100%);
+  padding:24px;
+}
+.login-card{
+  width:100%;background:var(--surface);border-radius:24px;
+  box-shadow:0 8px 32px rgba(90,160,210,0.18);
+  padding:36px 28px;text-align:center;
+}
+.login-bear{font-size:56px;line-height:1;margin-bottom:14px}
+.login-card h2{font-size:19px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.login-card p{font-size:13px;color:var(--text2);margin-top:6px;margin-bottom:24px}
+.login-btn-wrap{display:flex;justify-content:center;min-height:44px}
+.login-denied{
+  margin-top:16px;padding:10px 14px;border-radius:var(--r-sm);
+  background:#FCE8E3;color:#B8402F;font-size:12.5px;line-height:1.5;
+}
+.user-chip{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto}
+.user-chip img{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border)}
+.user-chip span{font-size:12px;font-weight:600;color:var(--text2);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-chip button{font-size:11px;color:var(--text3);text-decoration:underline;flex-shrink:0}
 
 /* ── header ── */
 .header{
@@ -96,9 +122,24 @@ input{font-family:inherit;outline:none}
 .cal-wrap{margin:0 16px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
 .cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
 .cal-header h3{font-size:15px;font-weight:700;color:var(--text)}
-.cal-nav{display:flex;gap:4px}
-.cal-nav button{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:18px;transition:background .15s}
+.cal-nav{display:flex;gap:3px;align-items:center}
+.cal-nav button{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;transition:background .15s;flex-shrink:0}
 .cal-nav button:hover{background:var(--bg2)}
+.cal-nav button[title="오늘로 이동"]{width:auto;border-radius:100px;padding:0 8px;font-size:9px;letter-spacing:0.3px;color:#5AADD4;border:1px solid var(--border)}
+.refresh-btn{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--text3);transition:color .15s}
+.refresh-btn:hover{color:#5AADD4}
+.refresh-btn.spinning{color:#5AADD4}
+.refresh-btn.spinning .refresh-icon{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  .refresh-btn.spinning .refresh-icon{animation:none}
+}
+.cal-range-note{
+  margin:0 16px 8px;padding:8px 12px;border-radius:var(--r-sm);
+  background:var(--bg2);color:var(--text3);font-size:11.5px;line-height:1.5;
+  display:none;
+}
+.cal-range-note.show{display:block}
 .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0 8px 6px}
 .cal-days-header span{font-size:11px;font-weight:600;color:var(--text3)}
 .cal-days-header span:first-child{color:#E87050}
@@ -121,6 +162,19 @@ input{font-family:inherit;outline:none}
 }
 .cal-cell.selected{background:#5AADD4!important;color:#fff!important;font-weight:700}
 .cal-cell.selected::after{background:#fff}
+.cal-cell.holiday{color:#D6483A;font-weight:700}
+.cal-cell.holiday:not(.today):not(.selected){background:#FCE8E3}
+.cal-cell.holiday::before{
+  content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#D6483A;
+}
+.cal-cell.selected.holiday::before{background:#fff}
+
+.holiday-banner{
+  display:flex;align-items:center;gap:6px;margin:0 16px 10px;padding:9px 12px;
+  background:#FCE8E3;border:1px solid #F3C6BB;border-radius:var(--r-sm);
+  font-size:12px;font-weight:600;color:#B8402F;
+}
 
 /* event detail */
 .event-detail{
@@ -399,7 +453,18 @@ input{font-family:inherit;outline:none}
 </head>
 <body>
 
-<div class="app">
+<!-- LOGIN GATE -->
+<div class="login-gate" id="login-gate">
+  <div class="login-card">
+    <div class="login-bear">🐻</div>
+    <h2>웅성웅성</h2>
+    <p>멤버만 이용할 수 있어요<br>구글 계정으로 로그인해주세요</p>
+    <div class="login-btn-wrap" id="g_id_signin"></div>
+    <div class="login-denied" id="login-denied" style="display:none">이 계정은 아직 등록되지 않았어요. 운영진에게 문의해주세요 🐾</div>
+  </div>
+</div>
+
+<div class="app" id="app-root" style="display:none">
 
   <!-- HEADER -->
   <div class="header">
@@ -409,6 +474,7 @@ input{font-family:inherit;outline:none}
         <h1>웅성웅성</h1>
         <p>페미니즘 독서 · 영화 모임</p>
       </div>
+      <div class="user-chip" id="user-chip"></div>
     </div>
 
     <!-- TAB BAR -->
@@ -442,15 +508,22 @@ input{font-family:inherit;outline:none}
       </div>
     </div>
 
-    <div class="section-label">📅 모임 캘린더</div>
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:20px">
+      <span>📅 모임 캘린더</span>
+      <button class="refresh-btn" id="meeting-refresh-btn" onclick="refreshMeetings()"><span class="refresh-icon">↻</span> 새로고침</button>
+    </div>
     <div class="cal-wrap">
       <div class="cal-header">
         <h3 id="cal-title"></h3>
         <div class="cal-nav">
-          <button onclick="moveMonth(-1)">‹</button>
-          <button onclick="moveMonth(1)">›</button>
+          <button onclick="moveYear(-1)" title="1년 전">«</button>
+          <button onclick="moveMonth(-1)" title="1개월 전">‹</button>
+          <button onclick="goToday()" title="오늘로 이동" style="font-size:11px;font-weight:700">TODAY</button>
+          <button onclick="moveMonth(1)" title="1개월 후">›</button>
+          <button onclick="moveYear(1)" title="1년 후">»</button>
         </div>
       </div>
+      <div id="cal-range-note" class="cal-range-note"></div>
       <div class="cal-days-header">
         <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
       </div>
@@ -513,6 +586,10 @@ input{font-family:inherit;outline:none}
   <!-- PAGE 3: NOTICE BOARD -->
   <div class="page" id="p3">
     <div class="notice-page" id="notice-page" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="section-label" style="padding:0;margin:0">📢 공지사항</span>
+        <button class="refresh-btn" id="notice-refresh-btn" onclick="refreshNotices()"><span class="refresh-icon">↻</span> 새로고침</button>
+      </div>
       <button class="notice-write-btn" onclick="openNoticeModal()">✏️ 새 글 쓰기</button>
       <div class="notice-tabs" id="notice-filter-tabs">
         <div class="filter-chip active" onclick="filterNotice('all',this)">전체</div>
@@ -588,10 +665,6 @@ input{font-family:inherit;outline:none}
         <div class="field-label">내용</div>
         <textarea class="modal-input modal-textarea" id="n-body" placeholder="내용을 입력하세요..." style="height:120px"></textarea>
       </div>
-      <div>
-        <div class="field-label">작성자</div>
-        <input type="text" class="modal-input" id="n-author" placeholder="닉네임 입력" maxlength="10"/>
-      </div>
       <button class="modal-save" onclick="saveNotice()">등록하기</button>
     </div>
   </div>
@@ -617,6 +690,143 @@ const WHEEL_COLORS = [
 ];
 
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwW55uU3GVDg8PeUEQ0bt2plBKF7Yo07xoEclyziMXwSNdTFHu7VtJyU2NX7h8HFV0YQQ/exec';
+
+/* ── 대한민국 공휴일 (대체공휴일 포함, 2024–2028) ── */
+const HOLIDAYS_KR = {
+  // 2024
+  '2024-01-01':'신정',
+  '2024-02-09':'설날 연휴',
+  '2024-02-10':'설날',
+  '2024-02-11':'설날 연휴',
+  '2024-02-12':'대체공휴일 (설날)',
+  '2024-03-01':'삼일절',
+  '2024-05-05':'어린이날',
+  '2024-05-06':'대체공휴일 (어린이날)',
+  '2024-05-15':'부처님오신날',
+  '2024-06-06':'현충일',
+  '2024-08-15':'광복절',
+  '2024-09-16':'추석 연휴',
+  '2024-09-17':'추석',
+  '2024-09-18':'추석 연휴',
+  '2024-10-03':'개천절',
+  '2024-10-09':'한글날',
+  '2024-12-25':'크리스마스',
+  // 2025
+  '2025-01-01':'신정',
+  '2025-01-27':'임시공휴일 (설 연휴)',
+  '2025-01-28':'설날 연휴',
+  '2025-01-29':'설날',
+  '2025-01-30':'설날 연휴',
+  '2025-03-01':'삼일절',
+  '2025-03-03':'대체공휴일 (삼일절)',
+  '2025-05-05':'어린이날·부처님오신날',
+  '2025-05-06':'대체공휴일 (어린이날·부처님오신날)',
+  '2025-06-06':'현충일',
+  '2025-08-15':'광복절',
+  '2025-10-03':'개천절',
+  '2025-10-05':'추석 연휴',
+  '2025-10-06':'추석',
+  '2025-10-07':'추석 연휴',
+  '2025-10-08':'대체공휴일 (추석)',
+  '2025-10-09':'한글날',
+  '2025-12-25':'크리스마스',
+  // 2026
+  '2026-01-01':'신정',
+  '2026-02-16':'설날 연휴',
+  '2026-02-17':'설날',
+  '2026-02-18':'설날 연휴',
+  '2026-03-01':'삼일절',
+  '2026-03-02':'대체공휴일 (삼일절)',
+  '2026-05-05':'어린이날',
+  '2026-05-24':'부처님오신날',
+  '2026-05-25':'대체공휴일 (부처님오신날)',
+  '2026-06-06':'현충일',
+  '2026-08-15':'광복절',
+  '2026-08-17':'대체공휴일 (광복절)',
+  '2026-09-24':'추석 연휴',
+  '2026-09-25':'추석',
+  '2026-09-26':'추석 연휴',
+  '2026-10-03':'개천절',
+  '2026-10-05':'대체공휴일 (개천절)',
+  '2026-10-09':'한글날',
+  '2026-12-25':'크리스마스',
+  // 2027
+  '2027-01-01':'신정',
+  '2027-02-06':'설날 연휴',
+  '2027-02-07':'설날',
+  '2027-02-08':'설날 연휴',
+  '2027-02-09':'대체공휴일 (설날)',
+  '2027-03-01':'삼일절',
+  '2027-05-05':'어린이날',
+  '2027-05-13':'부처님오신날',
+  '2027-06-06':'현충일',
+  '2027-08-15':'광복절',
+  '2027-08-16':'대체공휴일 (광복절)',
+  '2027-09-14':'추석 연휴',
+  '2027-09-15':'추석',
+  '2027-09-16':'추석 연휴',
+  '2027-10-03':'개천절',
+  '2027-10-04':'대체공휴일 (개천절)',
+  '2027-10-09':'한글날',
+  '2027-10-11':'대체공휴일 (한글날)',
+  '2027-12-25':'크리스마스',
+  '2027-12-27':'대체공휴일 (크리스마스)',
+  // 2028
+  '2028-01-01':'신정',
+  '2028-01-26':'설날 연휴',
+  '2028-01-27':'설날',
+  '2028-01-28':'설날 연휴',
+  '2028-03-01':'삼일절',
+  '2028-05-02':'부처님오신날',
+  '2028-05-05':'어린이날',
+  '2028-06-06':'현충일',
+  '2028-08-15':'광복절',
+  '2028-10-02':'추석 연휴',
+  '2028-10-03':'추석·개천절',
+  '2028-10-04':'추석 연휴',
+  '2028-10-05':'대체공휴일 (추석·개천절)',
+  '2028-10-09':'한글날',
+  '2028-12-25':'크리스마스',
+  // 2029
+  '2029-01-01':'신정',
+  '2029-02-12':'설날 연휴',
+  '2029-02-13':'설날',
+  '2029-02-14':'설날 연휴',
+  '2029-03-01':'삼일절',
+  '2029-05-05':'어린이날',
+  '2029-05-07':'대체공휴일 (어린이날)',
+  '2029-05-20':'부처님오신날',
+  '2029-05-21':'대체공휴일 (부처님오신날)',
+  '2029-06-06':'현충일',
+  '2029-08-15':'광복절',
+  '2029-09-21':'추석 연휴',
+  '2029-09-22':'추석',
+  '2029-09-23':'추석 연휴',
+  '2029-09-24':'대체공휴일 (추석)',
+  '2029-10-03':'개천절',
+  '2029-10-09':'한글날',
+  '2029-12-25':'크리스마스',
+  // 2030
+  '2030-01-01':'신정',
+  '2030-02-02':'설날 연휴',
+  '2030-02-03':'설날',
+  '2030-02-04':'설날 연휴',
+  '2030-02-05':'대체공휴일 (설날)',
+  '2030-03-01':'삼일절',
+  '2030-05-05':'어린이날',
+  '2030-05-06':'대체공휴일 (어린이날)',
+  '2030-05-09':'부처님오신날',
+  '2030-06-06':'현충일',
+  '2030-08-15':'광복절',
+  '2030-09-11':'추석 연휴',
+  '2030-09-12':'추석',
+  '2030-09-13':'추석 연휴',
+  '2030-10-03':'개천절',
+  '2030-10-09':'한글날',
+  '2030-12-25':'크리스마스',
+};
+const HOLIDAYS_KR_MAX_YEAR = 2030;
+const HOLIDAYS_KR_MIN_YEAR = 2024;
 
 let meetings = [];
 let lists = { movie: [], book: [] };
@@ -644,15 +854,17 @@ async function loadRouletteItems(){
 
 /* ── GOOGLE SHEETS API ── */
 async function apiGet(action){
-  const res = await fetch(SHEET_URL+'?action='+action);
+  const token = currentUser ? currentUser.idToken : '';
+  const res = await fetch(SHEET_URL+'?action='+action+'&idToken='+encodeURIComponent(token));
   return res.json();
 }
 async function apiPost(data){
   try{
+    const body = Object.assign({}, data, { idToken: currentUser ? currentUser.idToken : '' });
     const res = await fetch(SHEET_URL, {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(data)
+      body:JSON.stringify(body)
     });
     return await res.json();
   }catch(e){
@@ -666,28 +878,55 @@ function rowToMeeting(r){
   return {id:r[0],date:r[1],name:r[2],type:r[3],title:r[4],memo:r[5],members:r[6]?String(r[6]).split(','):[]};
 }
 function rowToNotice(r){
-  return {id:r[0],category:r[1],title:r[2],body:r[3],author:r[4],date:r[5],likes:Number(r[6])||0,pinned:r[7]==='TRUE'||r[7]===true,likedByMe:false};
+  return {id:r[0],category:r[1],title:r[2],body:r[3],author:r[4],date:r[5],likes:Number(r[6])||0,pinned:r[7]==='TRUE'||r[7]===true,authorEmail:r[8]||'',likedByMe:false};
+}
+function canDeleteNotice(n){
+  if(!currentUser) return false;
+  if(currentUser.role==='admin') return true;
+  return !!(n.authorEmail && n.authorEmail.toLowerCase()===currentUser.email.toLowerCase());
 }
 
-async function loadMeetings(){
+let meetingsLoaded=false, meetingsLoading=false;
+let noticesLoaded=false, noticesLoading=false;
+
+async function loadMeetings(force){
+  if(meetingsLoading) return;
+  if(meetingsLoaded && !force) return;
+  meetingsLoading=true;
   try{
-    showLoading('meetings');
+    if(!meetingsLoaded) showLoading('meetings');
     const rows = await apiGet('getMeetings');
     meetings = rows.slice(1).map(rowToMeeting);
+    meetingsLoaded=true;
     renderCal();
-    renderHistory('all');
+    if(currentTab===2) renderHistory(histFilter);
   }catch(e){showToast('일정 불러오기 실패 😢')}
-  finally{hideLoading('meetings')}
+  finally{meetingsLoading=false}
 }
 
-async function loadNotices(){
+async function loadNotices(force){
+  if(noticesLoading) return;
+  if(noticesLoaded && !force) return;
+  noticesLoading=true;
   try{
-    showLoading('notices');
+    if(!noticesLoaded) showLoading('notices');
     const rows = await apiGet('getNotices');
     notices = rows.slice(1).map(rowToNotice);
+    noticesLoaded=true;
     renderNotices();
   }catch(e){showToast('공지 불러오기 실패 😢')}
-  finally{hideLoading('notices')}
+  finally{noticesLoading=false}
+}
+
+function refreshMeetings(){
+  const btn=document.getElementById('meeting-refresh-btn');
+  if(btn) btn.classList.add('spinning');
+  loadMeetings(true).finally(()=>{if(btn) btn.classList.remove('spinning')});
+}
+function refreshNotices(){
+  const btn=document.getElementById('notice-refresh-btn');
+  if(btn) btn.classList.add('spinning');
+  loadNotices(true).finally(()=>{if(btn) btn.classList.remove('spinning')});
 }
 
 function showLoading(type){
@@ -706,7 +945,7 @@ function goTab(n){
   currentTab = n;
   document.querySelectorAll('.tab-item').forEach((el,i)=>el.classList.toggle('active',i===n));
   document.querySelectorAll('.page').forEach((el,i)=>el.classList.toggle('active',i===n));
-  if(n===2){renderHistory('all');}
+  if(n===2){if(meetingsLoaded){renderHistory(histFilter);}else{loadMeetings();}}
   if(n===3){loadNotices();}
   if(n===0){loadMeetings();}
 }
@@ -717,6 +956,8 @@ let calYear = today.getFullYear(), calMonth = today.getMonth();
 let selectedDate = null;
 
 function moveMonth(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}renderCal()}
+function moveYear(d){calYear+=d;renderCal()}
+function goToday(){calYear=today.getFullYear();calMonth=today.getMonth();renderCal()}
 
 function renderCal(){
   const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -737,9 +978,17 @@ function renderCal(){
     if(isToday&&!isSel)cls+=' today';
     if(isSel)cls+=' selected';
     if(eventDates.has(ds))cls+=' has-event';
+    if(HOLIDAYS_KR[ds])cls+=' holiday';
     html+=`<div class="${cls}" onclick="selectDate('${ds}')">${d}</div>`;
   }
   grid.innerHTML=html;
+  const note=document.getElementById('cal-range-note');
+  if(calYear<HOLIDAYS_KR_MIN_YEAR||calYear>HOLIDAYS_KR_MAX_YEAR){
+    note.textContent=`🐻 ${HOLIDAYS_KR_MIN_YEAR}~${HOLIDAYS_KR_MAX_YEAR}년만 공휴일이 표시돼요`;
+    note.classList.add('show');
+  }else{
+    note.classList.remove('show');
+  }
   renderEventDetail();
 }
 
@@ -752,14 +1001,16 @@ function selectDate(ds){
 function renderEventDetail(){
   const box=document.getElementById('event-detail');
   if(!selectedDate){box.innerHTML='<div class="no-event">날짜를 선택하면 일정이 표시돼요 🐾</div>';return}
+  const holidayName=HOLIDAYS_KR[selectedDate];
+  const holidayBanner=holidayName?`<div class="holiday-banner">🎉 ${esc(holidayName)}</div>`:'';
   const evs=meetings.filter(m=>m.date===selectedDate);
   const [y,mo,d]=selectedDate.split('-');
   const dateLabel=`${y}년 ${parseInt(mo)}월 ${parseInt(d)}일`;
   if(!evs.length){
-    box.innerHTML=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${dateLabel}</h4></div><div class="no-event">등록된 일정이 없어요</div>`;
+    box.innerHTML=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${dateLabel}</h4></div>${holidayBanner}<div class="no-event">등록된 일정이 없어요</div>`;
     return;
   }
-  let html=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${evs[0].name}</h4><span>${dateLabel}</span></div><div class="event-list">`;
+  let html=`<div class="event-detail-header"><span class="bear-sm">🐻</span><h4>${evs[0].name}</h4><span>${dateLabel}</span></div>${holidayBanner}<div class="event-list">`;
   evs.forEach(e=>{
     const badges = e.type==='both'
       ? '<span class="event-badge badge-movie">영화</span><span class="event-badge badge-book">도서</span>'
@@ -1111,7 +1362,7 @@ function openNoticeDetail(id){
         <button class="like-btn${n.likedByMe?' liked':''}" onclick="toggleLike(${n.id})">
           ${n.likedByMe?'🩷':'🤍'} 좋아요 ${n.likes}
         </button>
-        ${n.pinned?'':'<button onclick="deleteNotice('+n.id+')" style="font-size:12px;color:var(--text3);padding:8px">삭제</button>'}
+        ${(!n.pinned && canDeleteNotice(n))?'<button onclick="deleteNotice('+n.id+')" style="font-size:12px;color:var(--text3);padding:8px">삭제</button>':''}
       </div>
     </div>`;
   document.getElementById('notice-detail-modal').classList.add('open');
@@ -1141,7 +1392,6 @@ function openNoticeModal(){
   noticeCategory='notice';
   document.getElementById('n-title').value='';
   document.getElementById('n-body').value='';
-  document.getElementById('n-author').value='';
   document.getElementById('nc-notice').className='type-radio sel-movie';
   document.getElementById('nc-vote').className='type-radio';
   document.getElementById('nc-free').className='type-radio';
@@ -1160,10 +1410,10 @@ function selNoticeCategory(c){
 function saveNotice(){
   const title=document.getElementById('n-title').value.trim();
   const body=document.getElementById('n-body').value.trim();
-  const author=document.getElementById('n-author').value.trim()||'익명';
   if(!title||!body){showToast('제목과 내용은 필수예요');return}
   const today2=new Date().toISOString().slice(0,10);
-  const newNotice={id:Date.now(),category:noticeCategory,title,body,author,date:today2,pinned:false,likes:0,likedByMe:false};
+  // 작성자는 로그인한 계정 이름으로 자동 지정돼요 (서버에서도 다시 한번 검증해서 덮어써요)
+  const newNotice={id:Date.now(),category:noticeCategory,title,body,author:currentUser.name,authorEmail:currentUser.email,date:today2,pinned:false,likes:0,likedByMe:false};
   notices.unshift(newNotice);
   document.getElementById('notice-modal').classList.remove('open');
   renderNotices();
@@ -1179,12 +1429,88 @@ function showToast(msg){
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);
 }
 
+/* ── 구글 로그인 ── */
+// ⚠️ Google Cloud Console에서 OAuth 클라이언트 ID를 만든 뒤 아래 값을 실제 값으로 교체하세요.
+const GOOGLE_CLIENT_ID = '1023620779388-06vsibncu04aqkv3ptejnvvcj4qfbi7r.apps.googleusercontent.com';
+
+let currentUser = null; // {email, name, picture, role, idToken}
+
+function initGoogleLogin(){
+  if(!window.google || !google.accounts || !google.accounts.id){
+    setTimeout(initGoogleLogin, 300); // 구글 스크립트가 아직 로드 안 됐으면 잠깐 뒤 재시도
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: true
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('g_id_signin'),
+    { theme:'outline', size:'large', text:'signin_with', shape:'pill', locale:'ko' }
+  );
+  google.accounts.id.prompt();
+}
+
+function decodeJwtPayload_(token){
+  try{
+    const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const json = decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(json);
+  }catch(e){ return {}; }
+}
+
+async function handleGoogleCredential(resp){
+  const idToken = resp.credential;
+  const payload = decodeJwtPayload_(idToken);
+  currentUser = { email: payload.email, name: payload.name, picture: payload.picture, idToken, role: 'member' };
+  document.getElementById('login-denied').style.display = 'none';
+
+  try{
+    const who = await apiGet('whoAmI');
+    if(!who || !who.ok){
+      currentUser = null;
+      document.getElementById('login-denied').style.display = 'block';
+      return;
+    }
+    // 서버에 등록된 진짜 이름/권한으로 맞춰줍니다 (구글 계정 이름과 다를 수 있어서)
+    currentUser.name = who.user.name;
+    currentUser.role = who.user.role;
+  }catch(e){
+    currentUser = null;
+    document.getElementById('login-denied').style.display = 'block';
+    return;
+  }
+
+  showApp();
+}
+
+function renderUserChip(){
+  const el = document.getElementById('user-chip');
+  if(!el || !currentUser) return;
+  el.innerHTML = `${currentUser.picture?`<img src="${currentUser.picture}" alt=""/>`:''}<span>${esc(currentUser.name)}</span><button onclick="logout()">로그아웃</button>`;
+}
+
+function logout(){
+  currentUser = null;
+  if(window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  document.getElementById('app-root').style.display = 'none';
+  document.getElementById('login-gate').style.display = 'flex';
+}
+
+function showApp(){
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('app-root').style.display = 'flex';
+  renderUserChip();
+  renderCal();
+  drawWheel();
+  loadMeetings();
+  loadNotices();
+  loadRouletteItems();
+}
+
 /* ── INIT ── */
-renderCal();
-drawWheel();
-loadMeetings();
-loadNotices();
-loadRouletteItems();
+initGoogleLogin();
 </script>
 </body>
 </html>
