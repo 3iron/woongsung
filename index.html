@@ -59,6 +59,13 @@ input{font-family:inherit;outline:none}
 .login-card h2{font-size:19px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .login-card p{font-size:13px;color:var(--text2);margin-top:6px;margin-bottom:24px}
 .login-btn-wrap{display:flex;justify-content:center;min-height:44px}
+.guest-btn{
+  margin-top:14px;width:100%;padding:11px 0;border-radius:100px;
+  background:var(--surface);border:1.5px solid var(--border);
+  font-size:13.5px;font-weight:600;color:var(--text2);cursor:pointer;
+}
+.guest-btn:active{background:#F2F6FA}
+.guest-hint{font-size:11.5px;color:var(--text3);margin-top:8px}
 .login-denied{
   margin-top:16px;padding:10px 14px;border-radius:var(--r-sm);
   background:#FCE8E3;color:#B8402F;font-size:12.5px;line-height:1.5;
@@ -460,6 +467,8 @@ input{font-family:inherit;outline:none}
     <h2>웅성웅성</h2>
     <p>멤버만 이용할 수 있어요<br>구글 계정으로 로그인해주세요</p>
     <div class="login-btn-wrap" id="g_id_signin"></div>
+    <button class="guest-btn" onclick="loginAsGuest()">게스트로 둘러보기 👀</button>
+    <div class="guest-hint">게스트는 모임 일정을 볼 수만 있어요</div>
     <div class="login-denied" id="login-denied" style="display:none">이 계정은 아직 등록되지 않았어요. 운영진에게 문의해주세요 🐾</div>
   </div>
 </div>
@@ -1026,6 +1035,7 @@ function renderEventDetail(){
 /* ── ADD EVENT MODAL ── */
 let modalType='movie';
 function openAddModal(){
+  if(!requireMember_()) return;
   const d = selectedDate||today.toISOString().slice(0,10);
   document.getElementById('m-date').value=d;
   document.getElementById('m-name').value='';
@@ -1095,6 +1105,7 @@ function renderItems(){
 }
 
 async function addItem(){
+  if(!requireMember_()) return;
   const inp=document.getElementById('new-item');
   const v=inp.value.trim();
   if(!v) return;
@@ -1371,6 +1382,7 @@ function openNoticeDetail(id){
 function closeNoticeDetailOut(e){if(e.target===document.getElementById('notice-detail-modal')) document.getElementById('notice-detail-modal').classList.remove('open')}
 
 function toggleLike(id){
+  if(!requireMember_()) return;
   const n=notices.find(x=>x.id===id);
   if(!n) return;
   n.likedByMe=!n.likedByMe;
@@ -1389,6 +1401,7 @@ function deleteNotice(id){
 }
 
 function openNoticeModal(){
+  if(!requireMember_()) return;
   noticeCategory='notice';
   document.getElementById('n-title').value='';
   document.getElementById('n-body').value='';
@@ -1434,6 +1447,30 @@ function showToast(msg){
 const GOOGLE_CLIENT_ID = '1023620779388-06vsibncu04aqkv3ptejnvvcj4qfbi7r.apps.googleusercontent.com';
 
 let currentUser = null; // {email, name, picture, role, idToken}
+
+function isGuest(){ return !currentUser || currentUser.role === 'guest'; }
+
+function loginAsGuest(){
+  currentUser = { email:'', name:'게스트', picture:'', idToken:'', role:'guest' };
+  document.getElementById('login-denied').style.display = 'none';
+  showApp();
+}
+
+// 게스트가 쓰기 동작을 시도하면 막고 안내합니다.
+function requireMember_(){
+  if(isGuest()){
+    showToast('게스트는 볼 수만 있어요. 멤버로 로그인해주세요 🐾');
+    return false;
+  }
+  return true;
+}
+
+// 게스트일 때 쓰기 버튼을 숨깁니다.
+function applyGuestUI(){
+  const guest = isGuest();
+  document.querySelectorAll('.add-event-btn, .notice-write-btn, .add-row')
+    .forEach(el => { if(el) el.style.display = guest ? 'none' : ''; });
+}
 
 function initGoogleLogin(){
   if(!window.google || !google.accounts || !google.accounts.id){
@@ -1488,6 +1525,10 @@ async function handleGoogleCredential(resp){
 function renderUserChip(){
   const el = document.getElementById('user-chip');
   if(!el || !currentUser) return;
+  if(isGuest()){
+    el.innerHTML = `<span>게스트</span><button onclick="logout()">로그인</button>`;
+    return;
+  }
   el.innerHTML = `${currentUser.picture?`<img src="${currentUser.picture}" alt=""/>`:''}<span>${esc(currentUser.name)}</span><button onclick="logout()">로그아웃</button>`;
 }
 
@@ -1502,6 +1543,7 @@ function showApp(){
   document.getElementById('login-gate').style.display = 'none';
   document.getElementById('app-root').style.display = 'flex';
   renderUserChip();
+  applyGuestUI();
   renderCal();
   drawWheel();
   loadMeetings();
