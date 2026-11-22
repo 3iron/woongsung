@@ -557,6 +557,10 @@
         background: var(--sage-light);
         color: #4a7a55;
       }
+      .badge-meet {
+        background: #e4ecf5;
+        color: #3a6a90;
+      }
       .event-title {
         font-size: 13px;
         color: var(--text);
@@ -1985,8 +1989,8 @@
         meetingsLoading = true;
         try {
           if (!meetingsLoaded) showLoading('meetings');
-          const rows = await apiGet('getMeetings');
-          meetings = rows.slice(1).map(rowToMeeting);
+          const res = await apiGet('getNotionMeetings');
+          meetings = res && res.ok && res.meetings ? res.meetings : [];
           meetingsLoaded = true;
           renderCal();
           if (currentTab === 2) renderHistory(histFilter);
@@ -2177,7 +2181,9 @@
               ? '<span class="event-badge badge-movie">영화</span><span class="event-badge badge-book">도서</span>'
               : e.type === 'movie'
                 ? '<span class="event-badge badge-movie">🎬 영화</span>'
-                : '<span class="event-badge badge-book">📚 도서</span>';
+                : e.type === 'book'
+                  ? '<span class="event-badge badge-book">📚 도서</span>'
+                  : '<span class="event-badge badge-meet">🐻 모임</span>';
           html += `<div class="event-row">${badges}<div><div class="event-title">${esc(e.title)}</div>${e.memo ? `<div class="event-memo">${esc(e.memo)}</div>` : ''}</div></div>`;
         });
         html += '</div>';
@@ -2458,7 +2464,9 @@
                 ? '<span class="badge badge-movie">🎬</span><span class="badge badge-book">📚</span>'
                 : m.type === 'movie'
                   ? '<span class="badge badge-movie">🎬 영화</span>'
-                  : '<span class="badge badge-book">📚 도서</span>';
+                  : m.type === 'book'
+                    ? '<span class="badge badge-book">📚 도서</span>'
+                    : '<span class="badge badge-meet">🐻 모임</span>';
             const members =
               m.members && m.members.length
                 ? m.members
